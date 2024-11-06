@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16.1-alpine
+    container_name: "api-demo-db"
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=api_demo_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - api_demo_app
+    volumes:
+      - database_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  django-drf:
+    build:
+      context: .
+      dockerfile: ./django_drf/Dockerfile
+    container_name: "api-demo-django-drf"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - api_demo_app
+    volumes:
+      - ./django_drf:/usr/src/app
+    command: >
+      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  database_postgres:
+
+networks:
+  api_demo_app:
+    driver: bridge
