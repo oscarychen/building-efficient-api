@@ -8,6 +8,7 @@ from services.car_services import CarService
 router = Router()
 
 class ListCarResponseItem(Schema):
+    id: int
     vin: str
     owner: str
     created_at: datetime

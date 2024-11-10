@@ -60,7 +60,7 @@ Now, we can hit this endpoint (you can use the api.http file provided in the rep
 
 > GET http://localhost:8000/cars/
 
-> Response code: 200 (OK); Time: 2432ms (2 s 432 ms); Content length: 15107465 bytes (15.11 MB)
+> Response code: 200 (OK); Time: 2564ms (2 s 564 ms); Content length: 15107465 bytes (15.11 MB)
 
 ### Chapter 2: Retrieving Car records with related model attributes using DRF ModelSerializer
 
@@ -69,19 +69,20 @@ Next, we are going to want to return some additional data for each of the Car re
 ```python
 # django_drf/car_registry/serializers.py
 class CarSerializerWithRelatedModel(serializers.ModelSerializer):
-    model_name = serializers.CharField(source='model.name', read_only=True)
-    model_year = serializers.IntegerField(source='model.year', read_only=True)
+    car_model_id = serializers.IntegerField(source='model_id', read_only=True)
+    car_model_name = serializers.CharField(source='model.name', read_only=True)
+    car_model_year = serializers.IntegerField(source='model.year', read_only=True)
     color = serializers.CharField(source='model.color', read_only=True)
     class Meta:
         model = Car
-        fields = '__all__'
+        fields = ...
 ```
 
 For comparison purpose, we keep the original API as-is, and added the modified API as a new API. Now we hit this new endpoint
 
 > GET http://localhost:8000/retrieve-cars-with-model/
 
-> Response code: 200 (OK); Time: 30801ms (30 s 801 ms); Content length: 21356443 bytes (21.36 MB)
+> Response code: 200 (OK); Time: 30779ms (30 s 779 ms); Content length: 22856443 bytes (22.86 MB)
 
 That took a lot longer.
 The query in the API view `Car.objects.all()` did not contain data about each `Car` record's related `CarModel` record, by the time the Serializer is trying to serialize each record, Django has to fire off an additional query to fetch the related `CarModel` in order to get the `model_name`, `model_year` and `color` that the serializer is asking for. This is called N+1 query problem, and it's very common problem in stacks involving some sort of ORM.
@@ -103,7 +104,7 @@ Again, for comparison purpose, we keep the previous API as-is, and added the mod
 
 > GET http://localhost:8000/retrieve-cars-with-prefetch-related/
 
-> Response code: 200 (OK); Time: 3199ms (3 s 199 ms); Content length: 21356443 bytes (21.36 MB)
+> Response code: 200 (OK); Time: 3394ms (3 s 394 ms); Content length: 22856443 bytes (22.86 MB)
 
 Now we are back down to around 3 seconds.
 
@@ -187,7 +188,7 @@ class CarListingAPI(APIView):
 Now we hit this new endpoint
 > GET http://localhost:8000/api/cars/
 
-> Response code: 200 (OK); Time: 2867ms (2 s 867 ms); Content length: 20267548 bytes (20.27 MB)
+> Response code: 200 (OK); Time: 3130ms (3 s 130 ms); Content length: 22856443 bytes (22.86 MB)
 
 This is a little bit faster than previous implementation, but not by much. The DRF Serializer is still iterating through each of the Car instances to turn it into a Python dictionary. There are few other things you can try here in Python to speed up the process, but we are going to move onto something else.
 
@@ -204,8 +205,9 @@ class CarService:
     def retrieve_all_cars_annotated(self):
         qs = self.retrieve_all_cars()
         qs = qs.annotate(
-            model_name=F('model__name'),
-            model_year=F('model__year'),
+            car_model_id=F('model_id'),
+            car_model_name=F('model__name'),
+            car_model_year=F('model__year'),
             color=F('model__color')
         )
         return qs
@@ -213,13 +215,14 @@ class CarService:
     def retrieve_all_cars_as_dicts(self):
         cars = self.retrieve_all_cars_annotated()
         return cars.values(
+            'id',
             'vin',
             'owner',
             'created_at',
             'updated_at',
-            'model_id',
-            'model_name',
-            'model_year',
+            'car_model_id',
+            'car_model_name',
+            'car_model_year',
             'color'
         )
 ```
@@ -237,7 +240,7 @@ Now we hit this new endpoint
 
 > GET http://localhost:8000/api/cars-2/
 
-> Response code: 200 (OK); Time: 1241ms (1 s 241 ms); Content length: 20567548 bytes (20.57 MB)
+> Response code: 200 (OK); Time: 1317ms (1 s 317 ms); Content length: 22856443 bytes (22.86 MB)
 
 There we cut the time in half again, mostly because we are not iterating the N number of Car instances in Python from the queryset as it is already serializeable.
 This is not always possible and sometimes may require you to write some pretty complicated Django queries. But as long as there is a way to write the query and make the database do the work, it's probably going to be faster than doing it in Python.
@@ -273,9 +276,9 @@ Finally, we hit the new endpoint that uses OrJsonResponse
 
 > GET http://localhost:8000/api/cars-3/
 
-> Response code: 200 (OK); Time: 908ms (908 ms); Content length: 21567548 bytes (21.57 MB)
+> Response code: 200 (OK); Time: 978ms (978 ms); Content length: 23856443 bytes (23.86 MB)
 
-And now we are able to get this API to return in under 1 second with 100k records with data from two tables.
+And now we are able to get this API to return in about 1 second with 100k records with data from two tables.
 
 ### Chapter 8: Other performance considerations
 At this point we have optimized the API from database query to response serialization. There are still some other areas that would affect API performance:
@@ -297,7 +300,7 @@ class CarListingAPI(APIView):
 In the django settings, I set the page size to be 1000, and hit the new endpoint
 > GET http://localhost:8000/api/cars-4-paginated/?page=4
 
-> Response code: 200 (OK); Time: 61ms (61 ms); Content length: 216164 bytes (216.16 kB)
+> Response code: 200 (OK); Time: 65ms (65 ms); Content length: 238164 bytes (238.16 kB)
 
 As expected, the response is much smaller and faster to return.
 
@@ -331,4 +334,6 @@ Note that this API is making use of the previously implemented CarService method
 Now we hit this new endpoint
 > GET http://localhost:8001/api/cars/
 
-> Response code: 200 (OK); Time: 3161ms (3 s 161 ms); Content length: 22767547 bytes (22.77 MB)
+> Response code: 200 (OK); Time: 3093ms (3 s 93 ms); Content length: 24056442 bytes (24.06 MB)
+
+This is comparable performance to the Django REST Framework implementation using Serializer with CarService's annotated queryset (Part A Chapter 5), I suspect that there is no significant performance advantage using the Ninja Schema over DRF Serializer since both are converting ORM objects in Python.

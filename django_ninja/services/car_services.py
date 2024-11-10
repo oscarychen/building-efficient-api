@@ -20,6 +20,7 @@ class CarService:
     def retrieve_all_cars_as_dicts(self):
         cars = self.retrieve_all_cars_annotated()
         return cars.values(
+            'id',
             'vin',
             'owner',
             'created_at',

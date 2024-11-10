@@ -10,8 +10,9 @@ class CarService:
     def retrieve_all_cars_annotated(self):
         qs = self.retrieve_all_cars()
         qs = qs.annotate(
-            model_name=F('model__name'),
-            model_year=F('model__year'),
+            car_model_id=F('model_id'),
+            car_model_name=F('model__name'),
+            car_model_year=F('model__year'),
             color=F('model__color')
         )
         return qs
@@ -19,12 +20,13 @@ class CarService:
     def retrieve_all_cars_as_dicts(self):
         cars = self.retrieve_all_cars_annotated()
         return cars.values(
+            'id',
             'vin',
             'owner',
             'created_at',
             'updated_at',
-            'model_id',
-            'model_name',
-            'model_year',
+            'car_model_id',
+            'car_model_name',
+            'car_model_year',
             'color'
         )
