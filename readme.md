@@ -3,12 +3,9 @@
 Today there are many technology stacks and frameworks to build web applications. Some are easier to start with than others. However, there are often hidden nuances about the tech stack that developers must be aware of when writing scalable code.
 
 In this repo, I will set up multiple mini projects to compare how different API code designs can affect performance.
+We start with a simple toy example of a Django REST Framework API, we will add a bit requirement to the API and see that it struggles to return 100k rows in over 30 seconds, and then step-by-step optimize it to return in under 1 second.
 
-Topics to cover:
-
-- Django REST Framework
-- Django Ninja
-- Golang
+TODO: I plan to also compare the same API written with Django-Ninja and pure Golang.
 
 # Data model
 
