@@ -64,7 +64,7 @@ Now, we can hit this endpoint (you can use the api.http file provided in the rep
 
 ### Chapter 2: Retrieving Car records with related model attributes using DRF ModelSerializer
 
-Next, we are going to want to return some additional data for each of the Car record retrieved while maintaining the response data structure, particular the related CarModel's attributes `name`, `year`, and `color`. Most Django developers would do the following changes to the serializer:
+Next, we are going to want to return some additional data for each of the Car record retrieved while maintaining the response data structure, particular the related CarModel's attributes `name`, `year`, and `color`. Most Django developers would simply make the following changes to the serializer:
 
 ```python
 # django_drf/car_registry/serializers.py
@@ -107,7 +107,8 @@ Again, for comparison purpose, we keep the previous API as-is, and added the mod
 
 Now we are back down to around 3 seconds.
 
-The `prefetch_related('model')` tells to the ORM to perform a join with the `CarModel` model, and the returned data from database contains all the attributes of `CarModel`, so when the serializer tries to access those attributes, the ORM does not need to query the database again, thus the N+1 query problem is eliminated.
+The `prefetch_related('model')` tells to the ORM to perform a single query to fetch all the related `CarModel` model instances, and the returned data from database contains all the attributes of `CarModel`, so when the serializer tries to access those attributes, the ORM does not need to query the database again, thus the N+1 query problem is eliminated.
+You may also consider using `select_related` which performs a SQL join on the original SQL query as long as the relation is not a many-to-many relation.
 
 This is typically where most Django REST Framework application would stop at in terms of API query optimization. However, sometimes we are requesting so much data, this is still not enough. But first, let's re-organize our project structure a little bit.
 
@@ -134,9 +135,9 @@ We want a project with 3 tiers: Models, Services, and APIs. Service and API code
 |-...
 ```
 
-I also do not like separating Serializer implementation from the API View implementation. Saving a bit of code duplication but create coupling between serializers and therefore APIs can be a source of problem in larger teams. As you have seen previously, it's very easy for a developer to make a little change in 1 serializer and somehow causes performance optimizing problems in serializers and views elsewhere. I would put the serializer and the view implementation together in a `some_api.py`, in fact I would put request param serializer, request body data serializer, and response serializer implementation all in the same file with the API View implementation that they are responsible for.
+I also do not like separating Serializer implementation from the API View implementation. Saving a bit of code duplication but create coupling between serializers and therefore APIs can be a source of problem in larger teams. As you have seen previously, it's very easy for a developer to make a little change in 1 serializer and somehow causes performance problems in serializers and views elsewhere. I would put the serializer and the view implementation together in a `some_api.py`, in fact I would put request param serializer, request body data serializer, and response serializer implementation all in the same file with the API View implementation that they are responsible for.
 
-You could probably also put all the Django app modules in a repository directory. In a way we are opting to use Django mostly only as a Model Repository, and we want to manage rest of the Django project structure ourselves more or less in a different pattern. But we won't go that far.
+You could probably also put all the Django app modules in a repository directory. In a way we are opinionated to use Django mostly only as a Model Repository, and we want to manage rest of the Django project structure ourselves more or less in a different pattern. But we won't go that far.
 
 With these in mind, we are going to implement the following:
 
@@ -274,12 +275,12 @@ Finally, we hit the new endpoint that uses OrJsonResponse
 
 > Response code: 200 (OK); Time: 908ms (908 ms); Content length: 21567548 bytes (21.57 MB)
 
-And now we are able to get this API to return in under 1 second with 100k records with data across 2 tables.
+And now we are able to get this API to return in under 1 second with 100k records with data from two tables.
 
 ### Chapter 8: Other performance considerations
 At this point we have optimized the API from database query to response serialization. There are still some other areas that would affect API performance:
-- database indexing: It is likely that you would have some sort of filtering in the query, which means you need to consider database indexing
-- query caching: especially if the data is relatively static
+- database indexing: It is likely that you would have some sort of filtering in the query, which means you need to consider database indexing. You would want to design your services in a way that they can take the parsed query parameters and use them for filtering as part of the Django query, and avoid doing any sort of filtering in Python.
+- query caching: generally a good idea especially if the data is relatively static
 - web server compression: such as gzip, would compress the response data to be magnitudes smaller especially for large responses like the example used here
 
 ### Chapter 9: Pagination
