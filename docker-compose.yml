@@ -36,6 +36,22 @@ services:
     command: >
       sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
 
+  django-ninja:
+    build:
+      context: .
+      dockerfile: ./django_ninja/Dockerfile
+    container_name: "api-demo-django-ninja"
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+    networks:
+      - api_demo_app
+    volumes:
+      - ./django_ninja:/usr/src/app
+    command: >
+      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8001"
+
 volumes:
   database_postgres:
 

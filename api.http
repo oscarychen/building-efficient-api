@@ -1,25 +1,30 @@
+### Django Rest Framework Chapter 1
 GET http://localhost:8000/cars/
 
 
-###
+### Django Rest Framework Chapter 2
 GET http://localhost:8000/retrieve-cars-with-model/
 
 
-###
+### Django Rest Framework Chapter 3
 GET http://localhost:8000/retrieve-cars-with-prefetch-related/
 
 
-###
+### Django Rest Framework Chapter 5
 GET http://localhost:8000/api/cars/
 
 
-###
+### Django Rest Framework Chapter 6
 GET http://localhost:8000/api/cars-2/
 
 
-###
+### Django Rest Framework Chapter 7
 GET http://localhost:8000/api/cars-3/
 
 
-###
+### Django Rest Framework Chapter 9
 GET http://localhost:8000/api/cars-4-paginated/?page=4
+
+
+### Django Ninja Chapter 1
+GET http://localhost:8001/api/cars/

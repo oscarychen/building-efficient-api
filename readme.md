@@ -300,3 +300,35 @@ In the django settings, I set the page size to be 1000, and hit the new endpoint
 > Response code: 200 (OK); Time: 61ms (61 ms); Content length: 216164 bytes (216.16 kB)
 
 As expected, the response is much smaller and faster to return.
+
+## Part B: Django-Ninja
+
+Django-Ninja is a newer API framework that is built on top of Django and Pydantic. It is designed to be faster than Django REST Framework, and has similar syntax to FastAPI.
+I'm going to copy the django_drf project and modify it to use Django-Ninja instead of Django REST Framework.
+The new ninja-powered Django project is set up in its own docker container and exposed on port 8001.
+
+### Chapter 1: Retrieving Car records Using Ninja API
+Similar to how we have previously set up the Django REST Framework API, we are going to set up a Ninja API in django_ninja/apis/:
+```python
+# django_ninja/apis/car_listing_api.py
+class ListCarResponseItem(Schema):
+    vin: str
+    owner: str
+    created_at: datetime
+    updated_at: datetime
+    car_model_id: int
+    car_model_name: str
+    car_model_year: int
+    color: str
+
+@router.get("/", response=list[ListCarResponseItem])
+def list_cars(request: HttpRequest):
+    return CarService().retrieve_all_cars_annotated()
+```
+The Ninja Schemas are analogous to Django REST Framework Serializers, and defines the API's request and response data structure.
+Note that this API is making use of the previously implemented CarService method `retrieve_all_cars_annotated`, so this example is comparable to Part A Chapter 5 example.
+
+Now we hit this new endpoint
+> GET http://localhost:8001/api/cars/
+
+> Response code: 200 (OK); Time: 3161ms (3 s 161 ms); Content length: 22767547 bytes (22.77 MB)
