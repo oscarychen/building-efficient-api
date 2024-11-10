@@ -324,7 +324,7 @@ class ListCarResponseItem(Schema):
     car_model_year: int
     color: str
 
-@router.get("/", response=list[ListCarResponseItem])
+@router.get("/cars/", response=list[ListCarResponseItem])
 def list_cars(request: HttpRequest):
     return CarService().retrieve_all_cars_annotated()
 ```
@@ -337,3 +337,43 @@ Now we hit this new endpoint
 > Response code: 200 (OK); Time: 3093ms (3 s 93 ms); Content length: 24056442 bytes (24.06 MB)
 
 This is comparable performance to the Django REST Framework implementation using Serializer with CarService's annotated queryset (Part A Chapter 5), I suspect that there is no significant performance advantage using the Ninja Schema over DRF Serializer since both are converting ORM objects in Python.
+
+
+### Chapter 2: Returning data directly from the database
+Similar to Part A Chapter 6, we are going to try to return the data directly from the database without converting the ORM objects into Python dictionaries:
+```python
+@router.get("/cars-2/")
+# django_ninja/apis/car_listing_api.py
+def list_cars_2(request: HttpRequest):
+    return list(CarService().retrieve_all_cars_as_dicts())
+```
+Now we hit this new endpoint
+> GET http://localhost:8001/api/cars-2/
+
+> Response code: 200 (OK); Time: 1357ms (1 s 357 ms); Content length: 24056442 bytes (24.06 MB)
+
+Again, we cut down the time in half by not converting the ORM objects into Python dictionaries before serializing them into json. This is also comparable performance to the Django REST Framework implementation using CarService (Part A Chapter 6).
+
+### Chapter 3: Using OrJson
+Similar to Part A Chapter 7 of DRF, we are going to try to use OrJson to serialize the response data. Based on the Django-nina documentation, we implement an OrJSONRenderer:
+
+```python
+# django_ninja/custom_renderer.py
+class ORJSONRenderer(BaseRenderer):
+    media_type = "application/json"
+
+    def render(self, request, data, *, response_status):
+        return orjson.dumps(data)
+```
+
+and we add the renderer argument to the NinjaAPI instance:
+```python
+# django_ninja/config/urls.py
+api = NinjaAPI(renderer=ORJSONRenderer())
+```
+We hit the endpoint implemented in previous chapter
+> GET http://localhost:8001/orjson-api/cars/
+
+> Response code: 200 (OK); Time: 980ms (980 ms); Content length: 23856443 bytes (23.86 MB)
+
+The performance is similar to the Django REST Framework implementation using OrJsonResponse (Part A Chapter 7).

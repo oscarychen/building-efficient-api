@@ -28,3 +28,8 @@ GET http://localhost:8000/api/cars-4-paginated/?page=4
 
 ### Django Ninja Chapter 1
 GET http://localhost:8001/api/cars/
+
+
+### Django Ninja Chapter 2/3
+GET http://localhost:8001/api/cars-2/
+
