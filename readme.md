@@ -8,8 +8,6 @@ Topics that I intend to cover:
 
 - Django REST Framework
 - Django Ninja
-- Flask
-- Fast API
 - Golang
 
 # Data model
@@ -26,7 +24,7 @@ For this experiment, we are going to set up a couple small data models the same 
 
 The Car and CarModel models each has a few more attributes themselves, but this demonstrates the 1-to-many relation between them.
 
-## Django REST Framework (DRF)
+## Part A: Django REST Framework (DRF)
 
 Django is an out-of-box solution and the go-to choice for startups and hobby projects alike. It has one of the most feature rich ORM and migration systems today. Django REST Framework has been a defacto go-to for those who are using Django as a web application backend.
 
@@ -34,7 +32,7 @@ Django is an out-of-box solution and the go-to choice for startups and hobby pro
 - run: `make docker-up`
 - populate database with 100k Car records: `make django-drf-populate`
 
-#### Retrieving Car records Using DRF ModelSerializer
+### Chapter 1: Retrieving Car records Using DRF ModelSerializer
 
 In typical Django REST framework toy example fashion, we set up a ModelSerializer and API View as such:
 
@@ -67,7 +65,7 @@ Now, we can hit this endpoint (you can use the api.http file provided in the rep
 
 > Response code: 200 (OK); Time: 2432ms (2 s 432 ms); Content length: 15107465 bytes (15.11 MB)
 
-#### Retrieving Car records with related model attributes using DRF ModelSerializer
+### Chapter 2: Retrieving Car records with related model attributes using DRF ModelSerializer
 
 Next, we are going to want to return some additional data for each of the Car record retrieved while maintaining the response data structure, particular the related CarModel's attributes `name`, `year`, and `color`. Most Django developers would do the following changes to the serializer:
 
@@ -93,7 +91,7 @@ The query in the API view `Car.objects.all()` did not contain data about each `C
 
 In Django REST Framework, this can be a very easy mistake to make (simply by modifying a serializer), and luckily it's usually pretty simple to fix.
 
-#### Optimizing retrieving Car records with related model attributes using query Prefetch
+### Chapter 3: Optimizing retrieving Car records with related model attributes using query Prefetch
 
 ```python
 # django_drf/car_registry/views.py
@@ -114,7 +112,7 @@ The `prefetch_related('model')` tells to the ORM to perform a join with the `Car
 
 This is typically where most Django REST Framework application would stop at in terms of API query optimization. However, sometimes we are requesting so much data, this is still not enough. But first, let's re-organize our project structure a little bit.
 
-#### Digress: Changing up the project structure a bit
+#### Chapter 4: Digress - Changing up the project structure a bit
 
 We are going to leave the previous implemented serializers.py and views.py where they are for now even though we will not be using them anymore.
 
@@ -158,7 +156,7 @@ class CarListingAPI(APIView):
 
 Now we are ready to flesh out some of the implementation details next.
 
-#### Replacing ModelSerializer with Serializer
+#### Chapter 5: Replacing ModelSerializer with Serializer
 
 The first thing we are going to try is to use a DRF Serializer instead of ModelSerializer. Serializers are lighter weight than Model Serializer, while ModelSerializer automatically creates field-level serialization from their corresponding Model's field validators and simplifies write operations, it's an unnecessary overhead for read operations like listing and retrieving records from the database.
 
@@ -194,7 +192,7 @@ Now we hit this new endpoint
 
 This is a little bit faster than previous implementation, but not by much. The DRF Serializer is still iterate through each of the Car instances and turn it into a Python dictionary. There are few other things you can try here in Python to speed up the process, but we are going to move onto something else.
 
-#### Using Django ORM more and DRF Serialization less
+#### Chapter 6: Using Django ORM more and DRF Serialization less
 Next we are going to write the query in a way that we can get the data we want directly from the database, so that we can skip turning the data into Python dictionaries before serializing them into json.
 
 Building on the existing CarService class:
