@@ -159,7 +159,7 @@ Now we are ready to flesh out some of the implementation details next.
 
 ### Chapter 5: Replacing ModelSerializer with Serializer
 
-The first thing we are going to try is to use a DRF Serializer instead of ModelSerializer. Serializers are lighter weight than Model Serializer, while ModelSerializer automatically creates field-level serialization from their corresponding Model's field validators and simplifies write operations, it's an unnecessary overhead for read operations like listing and retrieving records from the database.
+The first thing we are going to try is to use a DRF Serializer instead of ModelSerializer. Serializers are lighter weight than Model Serializer, while ModelSerializer automatically creates field-level validators from their corresponding Model's field validators and simplifies write operations, it's an unnecessary overhead for read operations like listing and retrieving records from the database.
 
 We are going to fill out the service and API from the previous section as the following:
 
@@ -285,3 +285,20 @@ At this point we have optimized the API from database query to response serializ
 - query caching: especially if the data is relatively static
 - web server compression: such as gzip, would compress the response data to be magnitudes smaller especially for large responses like the example used here
 
+### Chapter 9: Pagination
+By this point, you probably are wondering why we are not using pagination. I don't think pagination is strictly a performance optimization as it requires a different design in the API consumer (frontend app) which sometimes result in a different user experience requirement. Nevertheless, it is easy enough to add the Pagination class from DRF:
+```python
+# django_drf/apis/car_listing_api_4_paginated.py
+class CarListingAPI(APIView):
+    def get(self, request: Request, *args, **kwargs) -> OrJsonResponse:
+        car_dicts = CarService().retrieve_all_cars_as_dicts()
+        paginator = PageNumberPagination()
+        paginated_car_dicts = paginator.paginate_queryset(car_dicts, request)
+        return OrJsonResponse(paginated_car_dicts, status=status.HTTP_200_OK)
+```
+In the django settings, I set the page size to be 1000, and hit the new endpoint
+> GET http://localhost:8000/api/cars-4-paginated/?page=4
+
+> Response code: 200 (OK); Time: 61ms (61 ms); Content length: 216164 bytes (216.16 kB)
+
+As expected, the response is much smaller and faster to return.

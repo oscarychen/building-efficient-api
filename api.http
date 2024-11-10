@@ -19,3 +19,7 @@ GET http://localhost:8000/api/cars-2/
 
 ###
 GET http://localhost:8000/api/cars-3/
+
+
+###
+GET http://localhost:8000/api/cars-4-paginated/?page=4
