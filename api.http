@@ -34,5 +34,5 @@ GET http://localhost:8001/api/cars/
 GET http://localhost:8001/api/cars-2/
 
 
-### Go Chapter 1
+### Go
 GET http://localhost:8080/cars/

@@ -1,11 +1,12 @@
-# Building efficient REST APIs with Django
+# Building efficient REST APIs, A Comparison between Django REST Framework, Django-Ninja, and Golang
 
 Today there are many technology stacks and frameworks to build web applications. Some are easier to start with than others. However, there are often hidden nuances about the tech stack that developers must be aware of when writing scalable code.
 
 In this repo, I will set up multiple mini projects to compare how different API code designs can affect performance.
-We start with a simple toy example of a Django REST Framework API, we will add a bit requirement to the API and see that it struggles to return 100k rows in over 30 seconds, and then step-by-step optimize it to return in under 1 second.
+We start with a simple toy example of a **Django REST Framework API**, we will add a bit requirement to the API and see that it struggles to return 100k rows in over 30 seconds, and then step-by-step optimize it to return in under 1 second.
+We will then set up an identical API using **Django-Ninja** and compare the performance.
+Finally, we will set up the same API using **Golang** with **sqlc** and **mux** and compare the performance.
 
-TODO: I plan to also compare the same API written with Django-Ninja and pure Golang.
 
 # Data model
 
@@ -166,7 +167,7 @@ We are going to fill out the service and API from the previous section as the fo
 # django_drf/services/car_services.py
 class CarService:
     def retrieve_all_cars(self):
-        return Car.objects.all().prefetch_related('model')
+        return Car.objects.all().select_related('model')
     
 # django_drf/apis/car_listing_api.py
 class CarListingResponseSerializer(serializers.Serializer):
@@ -200,7 +201,7 @@ Building on the existing CarService class:
 # django_drf/services/car_services.py
 class CarService:
     def retrieve_all_cars(self):
-        return Car.objects.all().prefetch_related('model')
+        return Car.objects.all().select_related('model')
 
     def retrieve_all_cars_annotated(self):
         qs = self.retrieve_all_cars()
@@ -378,3 +379,32 @@ We hit the endpoint implemented in previous chapter
 
 The performance is similar to the Django REST Framework implementation using OrJsonResponse (Part A Chapter 7).
 
+## Part C: Golang with sqlc and mux
+
+Finally, we are going to implement the same API using Golang. We are going to use sqlc to generate the database query code, and mux as the web server router. This is one of the more "bare metal" sort of approach to writing Go web server, and it does not involve any ORM.
+
+The way sqlc works is that you write a SQL query in a .sql file, and sqlc generates Go code that can execute the query and scan the result into a struct. This is similar to how Django's ORM works, but sqlc is much more lightweight and does not have the same level of abstraction as Django's ORM.
+
+To make things easier to set up, I'm going to "re-engineer" the Django models and put them into Go. Django has a command that allows you to see the SQL query generated for a migration:
+```bash
+docker exec -it api-demo-django-drf python manage.py sqlmigrate car_registry 0001 
+```
+And we copy the SQL query into go_sqlc_mux/schemas/0001_initial.up.sql.
+
+This file is essentially a migration step that would be used to make changes to the database.
+
+Similarly, we can steal the SQL query Django used by our previous CarService method `retrieve_all_cars_annotated`, you can simply put a breakpoint or print statement
+after each query to see what SQL Django generated, ie: `print(str(qs.query))`.
+
+We would put such query into go_sqlc_mux/sqlc/queries/car_registry.sql.
+
+Next, we run `sqlc generate` to generate the go Repository code. These code will be in the `go_sqlc_mux/internal/repository/` folder. 
+Inside of this folder you will see that sqlc has created database models `CarRegistryCar` and `CarRegistryCarmodel` as Go structs, that are akin to models we had set up in Django previously.
+
+After implementing the Service and Transport layers, and a bunch of other rather verbose almost boilerplate setups, the API is complete. I have the Go server exposed on port 8080.
+
+> GET http://localhost:8080/cars/
+
+> Response code: 200 (OK); Time: 486ms (486 ms); Content length: 22834258 bytes (22.83 MB)
+
+Surprisingly, or maybe not so surprisingly, the Go implementation is the fastest yet.
