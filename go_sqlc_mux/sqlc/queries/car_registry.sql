@@ -1,0 +1,2 @@
+-- name: GetAllCars :many
+SELECT "car_registry_car"."id", "car_registry_car"."vin", "car_registry_car"."owner", "car_registry_car"."created_at", "car_registry_car"."updated_at", "car_registry_car"."model_id" AS "car_model_id", "car_registry_carmodel"."name" AS "car_model_name", "car_registry_carmodel"."year" AS "car_model_year", "car_registry_carmodel"."color" AS "color" FROM "car_registry_car" INNER JOIN "car_registry_carmodel" ON ("car_registry_car"."model_id" = "car_registry_carmodel"."id");
