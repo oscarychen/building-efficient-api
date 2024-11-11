@@ -89,7 +89,7 @@ The query in the API view `Car.objects.all()` did not contain data about each `C
 
 In Django REST Framework, this can be a very easy mistake to make (simply by modifying a serializer) and sometimes not easy to spot; luckily it's usually pretty simple to fix.
 
-### Chapter 3: Optimizing retrieving Car records with related model attributes using query Prefetch
+### Chapter 3: Optimizing retrieving Car records with related model attributes using query Select_related / Prefetch_related
 
 Based on the previous example, we are going to modify the query by "prefetching" the related records:
 
@@ -97,19 +97,19 @@ Based on the previous example, we are going to modify the query by "prefetching"
 # django_drf/car_registry/views.py
 class CarListViewWithModelPrefetched(ListAPIView):
     serializer_class = CarSerializerWithRelatedModel
-    queryset = Car.objects.all().prefetch_related('model')
+    queryset = Car.objects.all().select_related('model')  # or .prefetch_related('model')
 ```
 
 Again, for comparison purpose, we keep the previous API as-is, and added the modified API as a new API. Now we hit this new endpoint
 
 > GET http://localhost:8000/retrieve-cars-with-prefetch-related/
 
-> Response code: 200 (OK); Time: 3394ms (3 s 394 ms); Content length: 22856443 bytes (22.86 MB)
+> Response code: 200 (OK); Time: 3968ms (3 s 968 ms); Content length: 22856443 bytes (22.86 MB)
 
 Now we are back down to around 3 seconds.
 
 The `prefetch_related('model')` tells to the ORM to perform a single query to fetch all the related `CarModel` model instances, and the returned data from database contains all the attributes of `CarModel`, so when the serializer tries to access those attributes, the ORM does not need to query the database again, thus the N+1 query problem is eliminated.
-You may also consider using `select_related` which performs a SQL join on the original SQL query as long as the relation is not a many-to-many relation.
+The `select_related('model')` performs a SQL join on the original SQL query as long as the relation is not a many-to-many relation, and the SQL query result contains the related data in a single query, and is technically preferred in our example here.
 
 This is typically where most Django REST Framework application would stop at in terms of API query optimization. However, sometimes we are requesting so much data, this is still not enough. But first, let's re-organize our project structure a little bit.
 
@@ -188,9 +188,9 @@ class CarListingAPI(APIView):
 Now we hit this new endpoint
 > GET http://localhost:8000/api/cars/
 
-> Response code: 200 (OK); Time: 3130ms (3 s 130 ms); Content length: 22856443 bytes (22.86 MB)
+> Response code: 200 (OK); Time: 3996ms (3 s 996 ms); Content length: 22856443 bytes (22.86 MB)
 
-This is a little bit faster than previous implementation, but not by much. The DRF Serializer is still iterating through each of the Car instances to turn it into a Python dictionary. There are few other things you can try here in Python to speed up the process, but we are going to move onto something else.
+This is not really faster than previous implementation. The DRF Serializer is still iterating through each of the Car instances to turn it into a Python dictionary. There are few other things you can try here in Python to speed up the process, but we are going to move onto something else.
 
 ### Chapter 6: Using Django ORM more and DRF Serializer less
 Next we are going to write the query in a way that we can get the data we want directly from the database, so that we can skip turning the data into Python dictionaries before serializing them into json.
@@ -240,7 +240,7 @@ Now we hit this new endpoint
 
 > GET http://localhost:8000/api/cars-2/
 
-> Response code: 200 (OK); Time: 1317ms (1 s 317 ms); Content length: 22856443 bytes (22.86 MB)
+> Response code: 200 (OK); Time: 1373ms (1 s 373 ms); Content length: 22856443 bytes (22.86 MB)
 
 There we cut the time in half again, mostly because we are not iterating the N number of Car instances in Python from the queryset as it is already serializeable.
 This is not always possible and sometimes may require you to write some pretty complicated Django queries. But as long as there is a way to write the query and make the database do the work, it's probably going to be faster than doing it in Python.
@@ -276,7 +276,7 @@ Finally, we hit the new endpoint that uses OrJsonResponse
 
 > GET http://localhost:8000/api/cars-3/
 
-> Response code: 200 (OK); Time: 978ms (978 ms); Content length: 23856443 bytes (23.86 MB)
+> Response code: 200 (OK); Time: 1035ms (1 s 35 ms); Content length: 23856443 bytes (23.86 MB)
 
 And now we are able to get this API to return in about 1 second with 100k records with data from two tables.
 
@@ -334,7 +334,7 @@ Note that this API is making use of the previously implemented CarService method
 Now we hit this new endpoint
 > GET http://localhost:8001/api/cars/
 
-> Response code: 200 (OK); Time: 3093ms (3 s 93 ms); Content length: 24056442 bytes (24.06 MB)
+> Response code: 200 (OK); Time: 3602ms (3 s 602 ms); Content length: 23856443 bytes (23.86 MB)
 
 This is comparable performance to the Django REST Framework implementation using Serializer with CarService's annotated queryset (Part A Chapter 5), I suspect that there is no significant performance advantage using the Ninja Schema over DRF Serializer since both are converting ORM objects in Python.
 
@@ -350,7 +350,7 @@ def list_cars_2(request: HttpRequest):
 Now we hit this new endpoint
 > GET http://localhost:8001/api/cars-2/
 
-> Response code: 200 (OK); Time: 1357ms (1 s 357 ms); Content length: 24056442 bytes (24.06 MB)
+> Response code: 200 (OK); Time: 1367ms (1 s 367 ms); Content length: 24056442 bytes (24.06 MB)
 
 Again, we cut down the time in half by not converting the ORM objects into Python dictionaries before serializing them into json. This is also comparable performance to the Django REST Framework implementation using CarService (Part A Chapter 6).
 
@@ -374,6 +374,7 @@ api = NinjaAPI(renderer=ORJSONRenderer())
 We hit the endpoint implemented in previous chapter
 > GET http://localhost:8001/orjson-api/cars/
 
-> Response code: 200 (OK); Time: 980ms (980 ms); Content length: 23856443 bytes (23.86 MB)
+> Response code: 200 (OK); Time: 1061ms (1 s 61 ms); Content length: 23856443 bytes (23.86 MB)
 
 The performance is similar to the Django REST Framework implementation using OrJsonResponse (Part A Chapter 7).
+

@@ -17,6 +17,6 @@ class CarListViewWithModel(ListAPIView):
 
 class CarListViewWithModelPrefetched(ListAPIView):
     serializer_class = CarSerializerWithRelatedModel
-    queryset = Car.objects.all().prefetch_related('model')
+    queryset = Car.objects.all().select_related('model')
     pagination_class = None
     

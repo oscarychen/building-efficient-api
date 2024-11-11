@@ -5,7 +5,7 @@ from car_registry.models import Car
 
 class CarService:
     def retrieve_all_cars(self):
-        return Car.objects.all().prefetch_related('model')
+        return Car.objects.all().select_related('model')
 
     def retrieve_all_cars_annotated(self):
         qs = self.retrieve_all_cars()
