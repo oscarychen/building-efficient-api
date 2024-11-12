@@ -9,8 +9,14 @@ endif
 docker-build:
 	docker-compose build --no-cache
 
-docker-up:
-	docker-compose up -d
+docker-up-drf:
+	docker-compose up -d django-drf
+
+docker-up-ninja:
+	docker-compose up -d django-ninja
+
+docker-up-go:
+	docker-compose up -d go-sqlc-mux
 
 docker-down:
 	docker-compose down

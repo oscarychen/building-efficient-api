@@ -27,7 +27,9 @@ The Car and CarModel models have 1-to-many relationship between them, each with 
 Django is a popular choice for startups and hobby projects. It offers a feature-rich ORM and migration system. Django REST Framework is widely used for building web application backends with Django.
 To get started, I've included some basic docker configuration for Django development server and postgres server, as well as a simple management command to populate 100k rows of Car records.
 - build: `make docker-build`
-- run: `make docker-up`
+- run Django REST Framework: `make docker-up-drf`
+- run Django-Ninja: `make docker-up-ninja`
+- run Go: `make docker-up-go`
 - populate database with 100k Car records: `make django-drf-populate`
 
 ### Chapter 1: Retrieving Car records Using DRF ModelSerializer

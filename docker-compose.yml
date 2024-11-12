@@ -56,6 +56,7 @@ services:
     build:
       context: .
       dockerfile: ./go_sqlc_mux/Dockerfile
+    container_name: "api-demo-go-sqlc-mux"
     ports:
       - "8080:8080"
     depends_on:
