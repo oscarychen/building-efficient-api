@@ -1,11 +1,14 @@
-# Building efficient REST APIs, A Comparison between Django REST Framework, Django-Ninja, and Golang
+# Building efficient maintainable REST APIs for data retrieval
+_comparing methodologies in Django REST Framework, Django-Ninja, and Golang_
 
-Today there are many technology stacks and frameworks to build web applications. Some are easier to start with than others. However, there are often hidden nuances about the tech stack that developers must be aware of when writing scalable code.
 
-In this repo, I will set up multiple mini projects to compare how different API code designs can affect performance.
+In this repo, I have set up multiple mini projects to compare how different API code designs can affect performance.
+
 We start with a simple toy example of a **Django REST Framework API**, we will add a bit requirement to the API and see that it struggles to return 100k rows in over 30 seconds, and then step-by-step optimize it to return in under 1 second.
-We will then set up an identical API using **Django-Ninja** and compare the performance.
-Finally, we will set up the same API using **Golang** with **sqlc** and **mux** and compare the performance.
+
+I've also set up an identical API using **Django-Ninja**, as well as using **Golang** with **sqlc** and **mux**, to compare their performances.
+
+Jump to TLDR [Conclusions](#conclusions-tldr)
 
 
 # Data model
@@ -391,14 +394,14 @@ To make things easier to set up, I'm going to "re-engineer" the Django models an
 ```bash
 docker exec -it api-demo-django-drf python manage.py sqlmigrate car_registry 0001 
 ```
-And we copy the SQL query into go_sqlc_mux/schemas/0001_initial.up.sql.
+And we copy the SQL query into `go_sqlc_mux/schemas/0001_initial.up.sql`.
 
 This file is essentially a migration step that would be used to make changes to the database.
 
 Similarly, we can steal the SQL query Django used by our previous CarService method `retrieve_all_cars_annotated`, you can simply put a breakpoint or print statement
 after each query to see what SQL Django generated, ie: `print(str(qs.query))`.
 
-We would put such query into go_sqlc_mux/sqlc/queries/car_registry.sql.
+We would put such query into `go_sqlc_mux/sqlc/queries/car_registry.sql`.
 
 Next, we run `sqlc generate` to generate the go Repository code. These code will be in the `go_sqlc_mux/internal/repository/` folder. 
 Inside of this folder you will see that sqlc has created database models `CarRegistryCar` and `CarRegistryCarmodel` as Go structs, that are akin to models we had set up in Django previously.
@@ -409,7 +412,7 @@ After implementing the Service and Transport layers, and a bunch of other rather
 
 > Response code: 200 (OK); Time: 486ms (486 ms); Content length: 22834258 bytes (22.83 MB)
 
-Surprisingly, or maybe not so surprisingly, the Go implementation is the fastest yet.
+Unsurprisingly, the Go implementation is the fastest yet.
 
 
 # Part D: Comparison
@@ -426,105 +429,125 @@ For each data size, each API is tested 10 times, and the response time is record
 - Go API implemented using mux and sqlc
 
 The data sizes used for testing are as the following:
-- 100k records, 23 MB uncompressed
-- 200k records, 46 MB uncompressed
-- 300k records, 69 MB uncompressed
-- 400k records, 92 MB uncompressed
+- 100k records, 23 MB uncompressed response data size
+- 200k records, 46 MB uncompressed response data size
+- 300k records, 69 MB uncompressed response data size
+- 400k records, 92 MB uncompressed response data size
 
-See test data below in the Appendix.
+### Average response time in milliseconds
 
-# Conclusion
+|                        | 100k records | 200k records | 300k records | 400k records |
+|------------------------|--------------|--------------|--------------|--------------|
+| DRF with Serializer    | 3750         | 7832         | 11235        | 14939        |
+| Ninja with Schema      | 3455         | 6804         | 10148        | 13309        |
+| DRF without Serializer | 1034         | 1929         | 2947         | 3529         |
+| Ninja without Schema   | 947          | 1850         | 2739         | 3526         |
+| Go with mux            | 504          | 904          | 1231         | 1716         |
+
+While Django REST Framework's Serializer and Django-Ninja's Schema are very expensive, Django-Ninja is overall faster and more memory efficient than Django REST Framework. Go is the fastest by a good margin. See appendix for test detail data.
+
+
+### Docker container peak memory usage in MB during API request		
+
+The memory usage below are observed during any of the test of a particular API, and average memory usage may be lower. This these numbers may be safer for sizing server requirements.
+One thing that stood out to me was that Django REST Framework don't tend to release memory after the request is done, ie: the resting state memory usage appear to be often closer to the peak memory usage even when there is not request being processed. 
+This could have server sizing implications, because in real world a server would not be handling just one request at a time, and the memory usage would be cumulative.
+
+|                        | 100k records | 200k records | 300k records | 400k records |
+|------------------------|--------------|--------------|--------------|--------------|
+| DRF with Serializer    | 430          | 750          | 1060         | 1430         |
+| Ninja with Schema      | 400          | 780          | 1145         | 1380         |
+| DRF without Serializer | 310          | 430          | 515          | 655          |
+| Ninja without Schema   | 160          | 340          | 380          | 580          |
+| Go with mux            | 140          | 300          | 500          | 620          |
+
+Surprisingly, when Ninja is used without the Schema, it is as memory efficient and even more so than Go in some cases.
+
+
+# Conclusions (TLDR)
+
 ### DRF Serializer and Ninja Schema are very expensive
-### Ninja is overall faster and more memory efficient than Django REST Framework
-### Go is the fastest
+Serializer from Django REST Framework and Schema from Ninja are Python implementation that helps to convert data and object on a per-record basis, for this reason when dealing with large dataset, they can be very slow.
+Personally I think they are great for validating and sanitizing user input data during WRITE operations, but for READ operations, they are not always necessary and can be a performance bottleneck.
 
+Using them as a way of accessing relations can also introduce N+1 query problem very easily as seen in Part A Chapter 2 example.
+
+### Ninja is overall faster and more memory efficient than Django REST Framework
+When comparing the APIs that implements DRF Serializer and Ninja Schema, Ninja appears to provide 8-13% performance improvement, while using about the same amount of memory.
+When comparing the APIs that dot not implement Serializer and Schema, Ninja appears to provide up to 8% performance improvement, while using 10-50% less memory; and is even as comparable memory efficient as the API set up in Go in some cases.
+
+### Go is the fastest
+Being lightweight (no ORM), compiled, and statically typed, Go is the fastest and in most cases the most memory efficient implementation tested. 
+
+However, without many of the tools Django provides out of the box, it can be more difficult to get a project set up and running.
+In particular, I miss Django's ORM for writing simple queries, migrations, centralized settings, and ready-to-use authentication systems and various standard middlewares.
+If you are interested, I have set up a [template Go web project](https://github.com/oscarychen/eau-de-go) structure that I think is maintainable and scalable.
 
 # Appendix: test data
 
 ## 100k records retrieval test
  API response times in milliseconds
 
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
-|---------------------|-------------------|------------------------|----------------------|-----|
-| 3727                | 3531              | 1226                   | 972                  | 623 |
-| 3667                | 3336              | 1205                   | 1014                 | 442 |
-| 3987                | 3697              | 947                    | 948                  | 549 |
-| 3761                | 3326              | 1012                   | 897                  | 512 |
-| 3939                | 3434              | 929                    | 913                  | 468 |
-| 3597                | 3304              | 981                    | 961                  | 458 |
-| 3702                | 3592              | 1134                   | 935                  | 455 |
-| 3872                | 3528              | 950                    | 928                  | 463 |
-| 3606                | 3390              | 1002                   | 945                  | 639 |
-| 3644                | 3409              | 951                    | 952                  | 429 |
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go with mux |
+|---------------------|-------------------|------------------------|----------------------|-------------|
+| 3727                | 3531              | 1226                   | 972                  | 623         |
+| 3667                | 3336              | 1205                   | 1014                 | 442         |
+| 3987                | 3697              | 947                    | 948                  | 549         |
+| 3761                | 3326              | 1012                   | 897                  | 512         |
+| 3939                | 3434              | 929                    | 913                  | 468         |
+| 3597                | 3304              | 981                    | 961                  | 458         |
+| 3702                | 3592              | 1134                   | 935                  | 455         |
+| 3872                | 3528              | 950                    | 928                  | 463         |
+| 3606                | 3390              | 1002                   | 945                  | 639         |
+| 3644                | 3409              | 951                    | 952                  | 429         |
 
-Container peak memory usage in MB
-
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
-|---------------------|-------------------|------------------------|----------------------|-----|
-| 430                 | 400               | 310                    | 160                  | 140 |
 
 ## 200k records retrieval test
  API response times in milliseconds
 
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go   |
-|---------------------|-------------------|------------------------|----------------------|------|
-| 7913                | 6837              | 1876                   | 1802                 | 922  |
-| 7679                | 6920              | 1916                   | 1898                 | 941  |
-| 8085                | 6753              | 1955                   | 1816                 | 1058 |
-| 7954                | 6679              | 2279                   | 1841                 | 790  |
-| 7418                | 6833              | 1881                   | 1821                 | 959  |
-| 7846                | 6728              | 1916                   | 1844                 | 811  |
-| 7387                | 6588              | 1881                   | 1828                 | 904  |
-| 7921                | 7224              | 1879                   | 1821                 | 941  |
-| 7871                | 6636              | 1821                   | 1983                 | 872  |
-| 8247                | 6840              | 1887                   | 1848                 | 840  |
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go with mux |
+|---------------------|-------------------|------------------------|----------------------|-------------|
+| 7913                | 6837              | 1876                   | 1802                 | 922         |
+| 7679                | 6920              | 1916                   | 1898                 | 941         |
+| 8085                | 6753              | 1955                   | 1816                 | 1058        |
+| 7954                | 6679              | 2279                   | 1841                 | 790         |
+| 7418                | 6833              | 1881                   | 1821                 | 959         |
+| 7846                | 6728              | 1916                   | 1844                 | 811         |
+| 7387                | 6588              | 1881                   | 1828                 | 904         |
+| 7921                | 7224              | 1879                   | 1821                 | 941         |
+| 7871                | 6636              | 1821                   | 1983                 | 872         |
+| 8247                | 6840              | 1887                   | 1848                 | 840         |
 
-Container peak memory usage in MB
-
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
-|---------------------|-------------------|------------------------|----------------------|-----|
-| 750                 | 780               | 430                    | 340                  | 300 |
 
 ## 300k records retrieval test
  API response times in milliseconds
  
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go   |
-|---------------------|-------------------|------------------------|----------------------|------|
-| 11417               | 10634             | 2984                   | 2741                 | 1277 |
-| 11129               | 9907              | 2942                   | 2858                 | 1241 |
-| 11184               | 10113             | 2957                   | 2750                 | 1119 |
-| 11306               | 10201             | 2924                   | 2733                 | 1274 |
-| 11333               | 9831              | 2954                   | 2725                 | 1222 |
-| 11229               | 10274             | 2973                   | 2755                 | 1309 |
-| 11197               | 10022             | 2915                   | 2689                 | 1141 |
-| 11157               | 10056             | 2924                   | 2729                 | 1210 |
-| 11200               | 10188             | 2996                   | 2701                 | 1161 |
-| 11196               | 10254             | 2896                   | 2709                 | 1358 |
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go with mux |
+|---------------------|-------------------|------------------------|----------------------|-------------|
+| 11417               | 10634             | 2984                   | 2741                 | 1277        |
+| 11129               | 9907              | 2942                   | 2858                 | 1241        |
+| 11184               | 10113             | 2957                   | 2750                 | 1119        |
+| 11306               | 10201             | 2924                   | 2733                 | 1274        |
+| 11333               | 9831              | 2954                   | 2725                 | 1222        |
+| 11229               | 10274             | 2973                   | 2755                 | 1309        |
+| 11197               | 10022             | 2915                   | 2689                 | 1141        |
+| 11157               | 10056             | 2924                   | 2729                 | 1210        |
+| 11200               | 10188             | 2996                   | 2701                 | 1161        |
+| 11196               | 10254             | 2896                   | 2709                 | 1358        |
 
-Container peak memory usage in MB
-
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
-|---------------------|-------------------|------------------------|----------------------|-----|
-| 1060                | 1145              | 515                    | 380                  | 500 |
 
 ## 400k records retrieval test
  API response times in milliseconds
  
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go   |
-|---------------------|-------------------|------------------------|----------------------|------|
-| 15668               | 13421             | 3508                   | 3475                 | 1824 |
-| 15051               | 13210             | 3563                   | 3505                 | 1808 |
-| 14754               | 13586             | 3449                   | 3542                 | 1624 |
-| 14836               | 13280             | 3602                   | 3483                 | 1643 |
-| 14690               | 13352             | 3508                   | 3502                 | 1787 |
-| 14834               | 13382             | 3534                   | 3493                 | 1654 |
-| 15168               | 13356             | 3480                   | 3687                 | 1714 |
-| 15127               | 13142             | 3523                   | 3512                 | 1784 |
-| 14451               | 13232             | 3583                   | 3541                 | 1644 |
-| 14814               | 13132             | 3536                   | 3517                 | 1676 |
-
-Container peak memory usage in MB
-
-| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
-|---------------------|-------------------|------------------------|----------------------|-----|
-| 1430                | 1380              | 655                    | 580                  | 620 |
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go with mux |
+|---------------------|-------------------|------------------------|----------------------|-------------|
+| 15668               | 13421             | 3508                   | 3475                 | 1824        |
+| 15051               | 13210             | 3563                   | 3505                 | 1808        |
+| 14754               | 13586             | 3449                   | 3542                 | 1624        |
+| 14836               | 13280             | 3602                   | 3483                 | 1643        |
+| 14690               | 13352             | 3508                   | 3502                 | 1787        |
+| 14834               | 13382             | 3534                   | 3493                 | 1654        |
+| 15168               | 13356             | 3480                   | 3687                 | 1714        |
+| 15127               | 13142             | 3523                   | 3512                 | 1784        |
+| 14451               | 13232             | 3583                   | 3541                 | 1644        |
+| 14814               | 13132             | 3536                   | 3517                 | 1676        |
