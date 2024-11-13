@@ -433,6 +433,11 @@ The data sizes used for testing are as the following:
 
 See test data below in the Appendix.
 
+# Conclusion
+### DRF Serializer and Ninja Schema are very expensive
+### Ninja is overall faster and more memory efficient than Django REST Framework
+### Go is the fastest
+
 
 # Appendix: test data
 
