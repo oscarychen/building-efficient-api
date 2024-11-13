@@ -444,6 +444,8 @@ The data sizes used for testing are as the following:
 | Ninja without Schema   | 947          | 1850         | 2739         | 3526         |
 | Go with mux            | 504          | 904          | 1231         | 1716         |
 
+![API response times charted](assets/api_response_times.png)
+
 While Django REST Framework's Serializer and Django-Ninja's Schema are very expensive, Django-Ninja is overall faster and more memory efficient than Django REST Framework. Go is the fastest by a good margin. See appendix for test detail data.
 
 
@@ -461,6 +463,8 @@ This could have server sizing implications, because in real world a server would
 | Ninja without Schema   | 160          | 340          | 380          | 580          |
 | Go with mux            | 140          | 300          | 500          | 620          |
 
+![API memory usage charted](assets/api_container_memory_peak.png)
+
 Surprisingly, when Ninja is used without the Schema, it is as memory efficient and even more so than Go in some cases.
 
 
@@ -474,14 +478,14 @@ Using them as a way of accessing relations can also introduce N+1 query problem 
 
 ### Ninja is overall faster and more memory efficient than Django REST Framework
 When comparing the APIs that implements DRF Serializer and Ninja Schema, Ninja appears to provide 8-13% performance improvement, while using about the same amount of memory.
-When comparing the APIs that dot not implement Serializer and Schema, Ninja appears to provide up to 8% performance improvement, while using 10-50% less memory; and is even as comparable memory efficient as the API set up in Go in some cases.
+When comparing the APIs that do not implement Serializer and Schema, Ninja appears to provide up to 8% performance improvement, while using 10-50% less memory; and is even comparable to API set up in Go in some cases.
 
 ### Go is the fastest
 Being lightweight (no ORM), compiled, and statically typed, Go is the fastest and in most cases the most memory efficient implementation tested. 
 
 However, without many of the tools Django provides out of the box, it can be more difficult to get a project set up and running.
 In particular, I miss Django's ORM for writing simple queries, migrations, centralized settings, and ready-to-use authentication systems and various standard middlewares.
-If you are interested, I have set up a [template Go web project](https://github.com/oscarychen/eau-de-go) structure that I think is maintainable and scalable.
+If you are interested, I have set up a [template Go web project](https://github.com/oscarychen/eau-de-go) structure that I think is maintainable and scalable, with some of the typical web backend features you would expect from Django.
 
 # Appendix: test data
 
