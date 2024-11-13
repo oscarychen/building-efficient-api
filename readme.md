@@ -410,3 +410,116 @@ After implementing the Service and Transport layers, and a bunch of other rather
 > Response code: 200 (OK); Time: 486ms (486 ms); Content length: 22834258 bytes (22.83 MB)
 
 Surprisingly, or maybe not so surprisingly, the Go implementation is the fastest yet.
+
+
+# Part D: Comparison
+
+Previously in Part A, we populated the database with 100k rows of records using the Django management command `make django-drf-populate`. Each time this command is run it adds another 100k records. Let add more data and see how Django REST Framework, Django-Ninja, and Golang compare.
+
+For comparison purpose, I'm going to add an API that uses Django REST Framework's Serializer (Part A Chapter 5) and with returning the response using ORJson (Part A Chapter 7), so it can be a fair comparison against using Ninja's Schema and ORJson renderer (Part B Chapter 1/3).
+
+For each data size, each API is tested 10 times, and the response time is recorded, the highest container memory usage during these 10 tests is also recorded. 5 of APIs implemented previously are part of this comparison:
+- API implemented using Django REST Framework Serializer and OrJsonResponse
+- API implemented using Django REST Framework without Serializer and OrJsonResponse
+- API implemented using Django-Ninja Schema and ORJSONRenderer
+- API implemented using Django-Ninja without Schema and ORJSONRenderer
+- Go API implemented using mux and sqlc
+
+The data sizes used for testing are as the following:
+- 100k records, 23 MB uncompressed
+- 200k records, 46 MB uncompressed
+- 300k records, 69 MB uncompressed
+- 400k records, 92 MB uncompressed
+
+See test data below in the Appendix.
+
+
+# Appendix: test data
+
+## 100k records retrieval test
+ API response times in milliseconds
+
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
+|---------------------|-------------------|------------------------|----------------------|-----|
+| 3727                | 3531              | 1226                   | 972                  | 623 |
+| 3667                | 3336              | 1205                   | 1014                 | 442 |
+| 3987                | 3697              | 947                    | 948                  | 549 |
+| 3761                | 3326              | 1012                   | 897                  | 512 |
+| 3939                | 3434              | 929                    | 913                  | 468 |
+| 3597                | 3304              | 981                    | 961                  | 458 |
+| 3702                | 3592              | 1134                   | 935                  | 455 |
+| 3872                | 3528              | 950                    | 928                  | 463 |
+| 3606                | 3390              | 1002                   | 945                  | 639 |
+| 3644                | 3409              | 951                    | 952                  | 429 |
+
+Container peak memory usage in MB
+
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
+|---------------------|-------------------|------------------------|----------------------|-----|
+| 430                 | 400               | 310                    | 160                  | 140 |
+
+## 200k records retrieval test
+ API response times in milliseconds
+
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go   |
+|---------------------|-------------------|------------------------|----------------------|------|
+| 7913                | 6837              | 1876                   | 1802                 | 922  |
+| 7679                | 6920              | 1916                   | 1898                 | 941  |
+| 8085                | 6753              | 1955                   | 1816                 | 1058 |
+| 7954                | 6679              | 2279                   | 1841                 | 790  |
+| 7418                | 6833              | 1881                   | 1821                 | 959  |
+| 7846                | 6728              | 1916                   | 1844                 | 811  |
+| 7387                | 6588              | 1881                   | 1828                 | 904  |
+| 7921                | 7224              | 1879                   | 1821                 | 941  |
+| 7871                | 6636              | 1821                   | 1983                 | 872  |
+| 8247                | 6840              | 1887                   | 1848                 | 840  |
+
+Container peak memory usage in MB
+
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
+|---------------------|-------------------|------------------------|----------------------|-----|
+| 750                 | 780               | 430                    | 340                  | 300 |
+
+## 300k records retrieval test
+ API response times in milliseconds
+ 
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go   |
+|---------------------|-------------------|------------------------|----------------------|------|
+| 11417               | 10634             | 2984                   | 2741                 | 1277 |
+| 11129               | 9907              | 2942                   | 2858                 | 1241 |
+| 11184               | 10113             | 2957                   | 2750                 | 1119 |
+| 11306               | 10201             | 2924                   | 2733                 | 1274 |
+| 11333               | 9831              | 2954                   | 2725                 | 1222 |
+| 11229               | 10274             | 2973                   | 2755                 | 1309 |
+| 11197               | 10022             | 2915                   | 2689                 | 1141 |
+| 11157               | 10056             | 2924                   | 2729                 | 1210 |
+| 11200               | 10188             | 2996                   | 2701                 | 1161 |
+| 11196               | 10254             | 2896                   | 2709                 | 1358 |
+
+Container peak memory usage in MB
+
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
+|---------------------|-------------------|------------------------|----------------------|-----|
+| 1060                | 1145              | 515                    | 380                  | 500 |
+
+## 400k records retrieval test
+ API response times in milliseconds
+ 
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go   |
+|---------------------|-------------------|------------------------|----------------------|------|
+| 15668               | 13421             | 3508                   | 3475                 | 1824 |
+| 15051               | 13210             | 3563                   | 3505                 | 1808 |
+| 14754               | 13586             | 3449                   | 3542                 | 1624 |
+| 14836               | 13280             | 3602                   | 3483                 | 1643 |
+| 14690               | 13352             | 3508                   | 3502                 | 1787 |
+| 14834               | 13382             | 3534                   | 3493                 | 1654 |
+| 15168               | 13356             | 3480                   | 3687                 | 1714 |
+| 15127               | 13142             | 3523                   | 3512                 | 1784 |
+| 14451               | 13232             | 3583                   | 3541                 | 1644 |
+| 14814               | 13132             | 3536                   | 3517                 | 1676 |
+
+Container peak memory usage in MB
+
+| DRF with Serializer | Ninja with Schema | DRF without Serializer | Ninja without Schema | Go  |
+|---------------------|-------------------|------------------------|----------------------|-----|
+| 1430                | 1380              | 655                    | 580                  | 620 |

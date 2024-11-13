@@ -5,6 +5,7 @@ from apis.car_listing_api import CarListingAPI
 from apis.car_listing_api_2 import CarListingAPI as CarListingAPI2
 from apis.car_listing_api_3 import CarListingAPI as CarListingAPI3
 from apis.car_listing_api_4_paginated import CarListingAPI as CarListingAPI4
+from apis.car_listing_api_drf_serializer_with_orjson import CarListingAPI as CarListingAPI5
 
 
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path('api/cars-2/', CarListingAPI2.as_view()),
     path('api/cars-3/', CarListingAPI3.as_view()),
     path('api/cars-4-paginated/', CarListingAPI4.as_view()),
+    path('api/cars-serializer-orjson/', CarListingAPI5.as_view()),
 ]

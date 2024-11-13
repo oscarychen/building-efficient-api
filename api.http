@@ -1,38 +1,42 @@
-### Django Rest Framework Chapter 1
+### Django Rest Framework Chapter 1: Basic setup
 GET http://localhost:8000/cars/
 
 
-### Django Rest Framework Chapter 2
+### Django Rest Framework Chapter 2: Retrieve cars with model info
 GET http://localhost:8000/retrieve-cars-with-model/
 
 
-### Django Rest Framework Chapter 3
+### Django Rest Framework Chapter 3: Adding prefetching to the query
 GET http://localhost:8000/retrieve-cars-with-prefetch-related/
 
 
-### Django Rest Framework Chapter 5
+### Django Rest Framework Chapter 5: Replacing ModelSerializer with Serializer
 GET http://localhost:8000/api/cars/
 
 
-### Django Rest Framework Chapter 6
+### Django Rest Framework Chapter 6: Skipping serializers
 GET http://localhost:8000/api/cars-2/
 
 
-### Django Rest Framework Chapter 7
+### Django Rest Framework Chapter 7: Using Orjson
 GET http://localhost:8000/api/cars-3/
 
 
-### Django Rest Framework Chapter 9
+### Django Rest Framework Chapter 9: Paginated
 GET http://localhost:8000/api/cars-4-paginated/?page=4
 
 
-### Django Ninja Chapter 1
+### Django Ninja Chapter 1: Using Schema
 GET http://localhost:8001/api/cars/
 
 
-### Django Ninja Chapter 2/3
+### Django Ninja Chapter 2/3: Skipping schema, implement Orjson
 GET http://localhost:8001/api/cars-2/
 
 
 ### Go
 GET http://localhost:8080/cars/
+
+
+### Django Rest Framework Serializer with Orjson
+GET http://localhost:8000/api/cars-serializer-orjson/
