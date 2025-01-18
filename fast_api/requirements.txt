@@ -1,0 +1,3 @@
+fastapi[standard]==0.115.6
+sqlalchemy==2.0.37
+psycopg-binary==3.2.4
