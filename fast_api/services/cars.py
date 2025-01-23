@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Car, CarModel
+from models.cars import Car, CarModel
 
 
 class CarService:
