@@ -1,16 +1,23 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@localhost/api_demo_db"
-
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost/api_demo_db"
 
-def get_db():
-    db = SessionLocal()
-    try:
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=True,
+    pool_size=5,
+    max_overflow=3,
+    pool_timeout=30,
+    pool_recycle=1800,
+)
+
+AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+async def get_db() -> AsyncSession:
+    async with AsyncSessionLocal() as db:
         yield db
-    finally:
-        db.close()

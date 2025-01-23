@@ -40,3 +40,8 @@ GET http://localhost:8080/cars/
 
 ### Django Rest Framework Serializer with Orjson
 GET http://localhost:8000/api/cars-serializer-orjson/
+
+
+### FastAPI
+GET http://localhost:8002/api/cars/
+

@@ -3,6 +3,7 @@ from sqlalchemy.types import DECIMAL
 from database import Base
 from sqlalchemy.sql import func
 
+
 class CarModel(Base):
     __tablename__ = "car_registry_carmodel"
 
