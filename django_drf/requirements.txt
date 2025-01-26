@@ -1,5 +1,6 @@
 faker==30.8.2
-Django==5.1.2
+daphne==4.1.2
+Django==5.1.5
 djangorestframework==3.15.2
-orjson==3.10.11
-psycopg[binary]==3.2.3
+orjson==3.10.15
+psycopg[binary]==3.2.4

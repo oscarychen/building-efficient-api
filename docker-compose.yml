@@ -32,9 +32,9 @@ services:
     networks:
       - api_demo_app
     volumes:
-      - ./django_drf:/usr/src/app
-    command: >
-      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+      - ./django_drf:/app
+#    command: >
+#      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
 
   django-ninja:
     build:
