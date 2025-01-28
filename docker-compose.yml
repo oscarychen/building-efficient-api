@@ -15,7 +15,7 @@ services:
     volumes:
       - database_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -31,10 +31,6 @@ services:
       - db
     networks:
       - api_demo_app
-    volumes:
-      - ./django_drf:/app
-#    command: >
-#      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
 
   django-ninja:
     build:
@@ -47,10 +43,18 @@ services:
       - db
     networks:
       - api_demo_app
-    volumes:
-      - ./django_ninja:/usr/src/app
-#    command: >
-#      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8001"
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: ./fast_api/Dockerfile
+    container_name: "api-demo-fastapi"
+    ports:
+      - "8002:8002"
+    depends_on:
+      - db
+    networks:
+      - api_demo_app
 
   go-sqlc-mux:
     build:
@@ -63,7 +67,6 @@ services:
       - db
     networks:
       - api_demo_app
-
 
 volumes:
   database_postgres:

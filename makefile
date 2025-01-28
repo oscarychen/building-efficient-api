@@ -15,6 +15,9 @@ docker-up-drf:
 docker-up-ninja:
 	docker-compose up -d django-ninja
 
+docker-up-fastapi:
+	docker-compose up -d fastapi
+
 docker-up-go:
 	docker-compose up -d go-sqlc-mux
 
@@ -28,6 +31,10 @@ docker-clean:
 	@docker rmi $$(docker images -q) || true
 	@docker network rm $$(docker network ls -q) || true
 	@docker system prune -a --volumes || true
+
+
+django-drf-migrate:
+	docker exec -it api-demo-django-drf python manage.py migrate
 
 django-drf-populate:
 	docker exec -it api-demo-django-drf python manage.py populate
