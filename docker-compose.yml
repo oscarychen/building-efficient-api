@@ -49,8 +49,8 @@ services:
       - api_demo_app
     volumes:
       - ./django_ninja:/usr/src/app
-    command: >
-      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8001"
+#    command: >
+#      sh -c "./wait_for_db.sh -- python manage.py migrate && python manage.py runserver 0.0.0.0:8001"
 
   go-sqlc-mux:
     build:
