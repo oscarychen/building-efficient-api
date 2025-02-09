@@ -11,5 +11,5 @@ api.add_router("", router)
 
 
 urlpatterns = [
-    path("api/", api.urls),
+    path("", api.urls),
 ]
