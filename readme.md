@@ -338,7 +338,7 @@ The Ninja Schemas are analogous to Django REST Framework Serializers, and define
 Note that this API is making use of the previously implemented CarService method `retrieve_all_cars_annotated`, so this example is comparable to Part A Chapter 5 example.
 
 Now we hit this new endpoint
-> GET http://localhost:8001/api/cars/
+> GET http://localhost:8001/ninja/with-schema/
 
 > Response code: 200 (OK); Time: 3602ms (3 s 602 ms); Content length: 23856443 bytes (23.86 MB)
 
@@ -354,7 +354,7 @@ def list_cars_2(request: HttpRequest):
     return list(CarService().retrieve_all_cars_as_dicts())
 ```
 Now we hit this new endpoint
-> GET http://localhost:8001/api/cars-2/
+> GET http://localhost:8001/ninja/without-schema/
 
 > Response code: 200 (OK); Time: 1367ms (1 s 367 ms); Content length: 24056442 bytes (24.06 MB)
 
@@ -408,7 +408,7 @@ Inside of this folder you will see that sqlc has created database models `CarReg
 
 After implementing the Service and Transport layers, and a bunch of other rather verbose almost boilerplate setups, the API is complete. I have the Go server exposed on port 8080.
 
-> GET http://localhost:8080/cars/
+> GET http://localhost:8003/go/
 
 > Response code: 200 (OK); Time: 486ms (486 ms); Content length: 22834258 bytes (22.83 MB)
 

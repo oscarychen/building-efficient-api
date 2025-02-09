@@ -9,6 +9,9 @@ endif
 docker-build:
 	docker-compose build --no-cache
 
+docker-up:
+	docker-compose up -d
+
 docker-up-drf:
 	docker-compose up -d django-drf
 
