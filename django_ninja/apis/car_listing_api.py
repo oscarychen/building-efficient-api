@@ -18,11 +18,11 @@ class ListCarResponseItem(Schema):
     car_model_year: int
     color: str
 
-@router.get("/cars/", response=list[ListCarResponseItem])
+@router.get("/ninja/with-schema/", response=list[ListCarResponseItem])
 def list_cars(request: HttpRequest):
     return CarService().retrieve_all_cars_annotated()
 
 
-@router.get("/cars-2/")
+@router.get("/ninja/without-schema/")
 def list_cars_2(request: HttpRequest):
     return list(CarService().retrieve_all_cars_as_dicts())
