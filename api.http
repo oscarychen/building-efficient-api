@@ -27,15 +27,11 @@ GET http://localhost:8000/api/cars-4-paginated/?page=4
 
 
 ### Django Ninja Chapter 1: Using Schema
-GET http://localhost:8001/api/cars/
+GET http://localhost:8001/ninja/with-schema/
 
 
 ### Django Ninja Chapter 2/3: Skipping schema, implement Orjson
-GET http://localhost:8001/api/cars-2/
-
-
-### Go
-GET http://localhost:8080/cars/
+GET http://localhost:8001/ninja/without-schema/
 
 
 ### Django Rest Framework Serializer with Orjson
@@ -43,5 +39,8 @@ GET http://localhost:8000/api/cars-serializer-orjson/
 
 
 ### FastAPI
-GET http://localhost:8002/api/cars/
+GET http://localhost:8002/fastapi/
 
+
+### Go
+GET http://localhost:8003/go/
