@@ -23,6 +23,6 @@ class CarSchema(BaseModel):
     color: str
 
 
-@router.get("/api/cars/", response_model=list[CarSchema])
+@router.get("/fastapi/", response_model=list[CarSchema])
 async def list_cars(db: Annotated[AsyncSession, Depends(get_db)]):
     return await CarService(db).retrieve_all_cars()
