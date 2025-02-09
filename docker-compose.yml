@@ -62,7 +62,7 @@ services:
       dockerfile: ./go_sqlc_mux/Dockerfile
     container_name: "api-demo-go-sqlc-mux"
     ports:
-      - "8080:8080"
+      - "8003:8003"
     depends_on:
       - db
     networks:

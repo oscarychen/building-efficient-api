@@ -27,7 +27,7 @@ func NewHandler(carRegistryService CarRegistryService) *Handler {
 	//h.Router.Use(middleware.JSONMiddleware)
 
 	h.Server = &http.Server{
-		Addr:    "0.0.0.0:8080",
+		Addr:    "0.0.0.0:8003",
 		Handler: h.Router,
 	}
 	return h
@@ -35,7 +35,7 @@ func NewHandler(carRegistryService CarRegistryService) *Handler {
 
 func (h *Handler) mapRoutes() {
 
-	h.Router.HandleFunc("/cars/", h.GetAllCars).Methods("GET")
+	h.Router.HandleFunc("/go/", h.GetAllCars).Methods("GET")
 }
 
 func (h *Handler) Serve() error {
