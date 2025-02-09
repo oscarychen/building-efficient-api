@@ -13,34 +13,34 @@ class ApiLoadTest(FastHttpUser):
     @task(1)
     def test_drf_with_serializer(self):
         with task_lock:  # Only one task can run at a time due to this lock
-            self.client.get("http://localhost:8000/drf/with-serializer/")
+            self.client.get("http://django-drf:8000/drf/with-serializer/")
 
     @tag("drf_without_serializer")
     @task(1)
     def test_drf_without_serializer(self):
         with task_lock:
-            self.client.get("http://localhost:8000/drf/without-serializer/")
+            self.client.get("http://django-drf:8000/drf/without-serializer/")
 
     @tag("ninja_with_schema")
     @task(1)
     def test_ninja_with_schema(self):
         with task_lock:
-            self.client.get("http://localhost:8001/ninja/with-schema/")
+            self.client.get("http://django-ninja:8001/ninja/with-schema/")
 
     @tag("ninja_without_schema")
     @task(1)
     def test_ninja_without_schema(self):
         with task_lock:
-            self.client.get("http://localhost:8001/ninja/without-schema/")
+            self.client.get("http://django-ninja:8001/ninja/without-schema/")
 
     @tag("fastapi_with_pydantic")
     @task(1)
     def test_fastapi_with_pydantic(self):
         with task_lock:
-            self.client.get("http://localhost:8002/fastapi/")
+            self.client.get("http://fastapi:8002/fastapi/")
 
     @tag("go")
     @task(1)
     def test_go(self):
         with task_lock:
-            self.client.get("http://localhost:8003/go/")
+            self.client.get("http://go-sqlc-mux:8003/go/")

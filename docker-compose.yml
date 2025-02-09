@@ -68,6 +68,16 @@ services:
     networks:
       - api_demo_app
 
+  locust:
+    build:
+        context: .
+        dockerfile: ./load_testing/Dockerfile
+    container_name: "api-demo-locust"
+    ports:
+      - "8089:8089"
+    networks:
+        - api_demo_app
+
 volumes:
   database_postgres:
 
