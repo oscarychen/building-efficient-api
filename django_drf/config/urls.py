@@ -18,4 +18,7 @@ urlpatterns = [
     path('api/cars-3/', CarListingAPI3.as_view()),
     path('api/cars-4-paginated/', CarListingAPI4.as_view()),
     path('api/cars-serializer-orjson/', CarListingAPI5.as_view()),
+
+    path('drf/with-serializer/', CarListingAPI5.as_view()),
+    path('drf/without-serializer/', CarListingAPI3.as_view()),
 ]
